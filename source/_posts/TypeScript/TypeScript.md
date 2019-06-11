@@ -350,3 +350,247 @@ class Web extends programmer implements Person {
 ```
 
 ### 9.泛型
+```
+function getData<T>(value:T):T {
+    return value;
+}
+getData<number>(123);
+
+function getData<T>(value:T):any {
+    return value;
+}
+getData<number>(123);
+getData<string>('123');
+
+泛型类
+class MinClass<T> {
+    public list:T[]=[];
+    add(value:T):void {
+        this.list.push(value);
+    }
+    min():T{
+        var minNum = this.list[0];
+        for(var i=0;i<this.list.length;i++) {
+            if(minNum>this.list[i]) {
+                minNum = this.list[i];
+            }
+        }
+        return minNum;
+    }
+}
+
+var m1 = new MinClass<number>();  // 实例化类 并且制定类的T代表类型是number
+m1.add(123);
+var m2 = new MinClass<string>();  // 实例化类 并且制定类的T代表类型是string
+m2.add('123');
+
+泛型接口
+interface ConfigFn {
+    <T>(value:T):T;
+}
+var getData:ConfigFn = function<T>(value: T):T {
+    return value;
+}
+getData<string>('张三');
+getData<number>(123);
+
+interface ConfigFn<T> {
+    <T>(value:T):T;
+}
+function getData<T>(value: T):T {
+    return value;
+}
+
+var myGetData:ConfigFn<string>=getData;
+myGetData('张三');
+var myGetDataw:ConfigFn<number>=getData;
+myGetData(123);
+
+
+把类作为参数来约束数据传入类型
+class User {
+    userName: string | undefined;
+    password: string | undefined;
+}
+class MysqlDb {
+    add(User:User):boolean {
+        console.log(User);
+        return true;
+    }
+}
+var user = new User();
+user.userName = '张三';
+user.password = '123456';
+var db = new MysqlDb();
+db.add(user);
+ 
+泛型类
+class User {
+    userName: string | undefined;
+    password: string | undefined;
+}
+class MysqlDb {
+    add(User:T):boolean {
+        console.log(User);
+        return true;
+    }
+}
+var user = new User();
+user.userName = '张三';
+user.password = '123456';
+var db = new MysqlDb<User>();
+db.add(user);
+
+
+约束规范使用接口，代码重用使用泛型。
+
+interface DBI<T> {
+    add(info:T):boolean;
+    update(info:T,id:number):boolean;
+    delete(id:number):boolean;
+    get(id:number):any[];
+}
+class MysqlDb<T> implements DBI<T> {
+    add(info:T):boolean {
+        console.log(info);
+        return true;
+    }
+    update(info:T,id:number):boolean {
+        console.log(info,id);
+        return true;
+    }
+    delete(id:number):boolean {
+        console.log(id);
+        return true;
+    }
+    get(id:number):boolean {
+        console.log(id);
+        return true;
+    }
+}
+class Mongodb<T> implements DBI<T> {
+    add(info:T):boolean {
+        console.log(info);
+        return true;
+    }
+    update(info:T,id:number):boolean {
+        console.log(info,id);
+        return true;
+    }
+    delete(id:number):boolean {
+        console.log(id);
+        return true;
+    }
+    get(id:number):boolean {
+        console.log(id);
+        return true;
+    }
+}
+
+```
+
+### 10.模块
+- 模块的概念(官方): ”内部模块“=》”命名空间“，”外部模块“=》”模块“ 模块在其自身的作用域里面执行，而不是在全局作用域执行。这就意味着定义一个模块里的变量，函数，类等等在模块外部是不可见的，除非你明确的使用export形式之一导出他们。相反，如果想使用其他模块导出的变量，函数，类，接口等的时候，你必须要导入它们，可以使用import形式之一。
+- 模块的概念(自己理解): 我们可以把一些公共的功能单独抽离成一个文件作为一个模块。模块里面的变量，函数，类等都是私有的，如果我们要在外部访问模块里面的数据（变量，函数，类），我们需要通过export暴露模块里面的数据（变量、函数、类、、、）暴露后我们通过import引用模块里面的数据（变量，函数，类）。
+
+```
+定义 db.ts
+var a:string = "string";
+function getData(value:string):string {
+    return value
+}
+export {
+    a,
+    getData
+}
+使用
+import { a,getDate } form './db'
+getData();
+import { a,getData as get} form './db'
+get();
+
+定义 db.ts
+exprot default function getData(value:string):string {
+    return value
+}
+使用
+import getData form './db'
+getData();
+
+```
+
+### 11.命名空间
+- 命名空间和模块的区别： 命名空间，内部模块，主要用于组织代码，避免命名冲突。  模块，ts的外部模块的简称，侧重代码的复用，一个模块里可能会有多个命名空间。
+
+```
+namespace A {
+    interface Animal {
+        name:string;
+        eat(str:string):void;
+    }
+    export class Dog implements Animal {
+        name: string;
+        constructor(name:string) {
+            this.name = name;
+        }
+        eat() {
+            return `吃骨头`;
+        }
+    }
+}
+var dog = A.Dog("小黑");
+dog.eat();
+
+命名空间封装成模块
+a.ts文件名
+定义
+export namespace A {
+    interface Animal {
+        name:string;
+        eat(str:string):void;
+    }
+    export class Dog implements Animal {
+        name: string;
+        constructor(name:string) {
+            this.name = name;
+        }
+        eat() {
+            return `吃骨头`;
+        }
+    }
+}
+使用
+import { a } from './a'
+var dog = new a.Dog();
+dog.eat();
+
+```
+
+### 12.装饰器
+- 装饰器： 装饰器是一种特殊类型的声明，它能够被附加到类声明，方法，属性或参数上，可以修改类的行为。
+- 通俗的讲装饰器就是一个方法，可以注入到类、方法、属性参数上来扩展类、属性、方法、参数的功能。
+- 常见的装饰器有： 类装饰器、属性装饰器、方法装饰器、参数装饰器。
+- 装饰器写法： 普通装饰器（无法传参）、装饰器工厂（可传参）。
+- 装饰器是过去几年中js最大的成就之一，已经是Es7的标准特性之一。
+
+```
+类装饰器
+function logClass(params:any){
+    console.log(params);
+    params.prototype.apiUrl="动态扩展的属性";
+    params.prototype.run = function() {
+        console.log("我是run方法");
+    }
+}
+@logClass httpClient {
+    constructor() {
+
+    }
+    getData() {
+
+    }
+}
+var H = new httpClient();
+console.log(H.apiUrl);
+H.run();
+```
