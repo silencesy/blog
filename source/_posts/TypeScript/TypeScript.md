@@ -574,7 +574,7 @@ dog.eat();
 - 装饰器是过去几年中js最大的成就之一，已经是Es7的标准特性之一。
 
 ```
-类装饰器
+1.类装饰器(普通装饰器，无法传参)
 function logClass(params:any){
     console.log(params);
     params.prototype.apiUrl="动态扩展的属性";
@@ -582,7 +582,8 @@ function logClass(params:any){
         console.log("我是run方法");
     }
 }
-@logClass httpClient {
+@logClass
+httpClient {
     constructor() {
 
     }
@@ -593,4 +594,147 @@ function logClass(params:any){
 var H = new httpClient();
 console.log(H.apiUrl);
 H.run();
+
+2.类装饰器(装饰器工厂，可传参)
+function logClass(params:string){
+    return function(target:any) {
+        target.prototype.apiUrl="动态扩展的属性";
+        target.prototype.run = function() {
+            console.log("我是run方法");
+        }
+    }
+}
+@logClass('hello')
+httpClient {
+    constructor() {
+
+    }
+    getData() {
+
+    }
+}
+
+把类赋值给target
+把参数赋值给params
+
+var H:any = new httpClient();
+console.log(H.apiUrl);
+H.run();
+
+类装饰器重载以前类的构造函数
+function logClass(target: any) {
+    console.log(target);
+    return class extends target{
+        apiUrl:any = "我是修改后的url";
+        getData() {
+            console.log(this.apiUrl);
+        }
+    }
+}
+@logClass
+httpClient {
+
+    public apiUrl: string | undefined;
+    constructor() {
+        this.apiUrl = 'url';
+    }
+    getData() {
+        console.log(this.apiUrl);
+    }
+}
+var http = new httpClient();
+
+------------------------------
+3.属性装饰器(属性装饰器表达式会在运行时当作函数调用，传入下列两个参数，对于静态成员来说是类的构造函数，对于实例成员是类的原型对象)
+function logClass(params:any){
+    console.log(params);
+    params.prototype.apiUrl="动态扩展的属性";
+    params.prototype.run = function() {
+        console.log("我是run方法");
+    }
+}
+function logProperty(params:string){
+    return function(target: any,attr:any) {
+        console.log(target);
+        console.log(target[attr]);
+        target[attr] = params;
+    }
+}
+@logClass('xxx')
+httpClient {
+    @logProperty("http://baidu.com");
+    public url: string | undefined;
+    constructor() {
+        
+    }
+    getData() {
+        console.log(this.url);
+    }
+}
+var http = new httpClient();
+http.getData();
+
+4.方法装饰器
+它会被应用到的方法的属性描述符上，可以用来监视，修改或者替换方法定义
+方法装饰器会在运行是传入下列3个参数
+（1）对于静态成员来说类的构造函数，对于实例成员来说是类的原型对象。
+（2）成员的名字。
+（3）成员的属性描述符。
+
+function logMethod(params: any) {
+    return function(target:any,methodName:any,desc:any) {
+        console.log(target);
+        console.log(methodName);
+        console.log(desc);
+        target.apiUrl="动态扩展的属性";
+        target.run = function() {
+            console.log("我是run方法");
+        }
+    }
+}
+
+httpClient {
+    constructor() {
+        
+    }
+    @logMethod("http://baidu.com")
+    getData() {
+        console.log(this.url);
+    }
+}
+var http:any = new httpClient();
+http.run();
+
+------------------------------------------
+
+function logMethod(params: any) {
+    return function(target:any,methodName:any,desc:any) {
+        console.log(target);
+        console.log(methodName);
+        console.log(desc);
+        //修改装饰器的方法 把装饰器方法传入所以参数改为string类型
+        //保存当前的方法
+        var oMethod = desc.value;
+        desc.value = function(...args:any[]) {
+            args = args.map((value)=>{
+                return String(value)
+            });
+            console.log(args);
+        }
+    }
+}
+
+httpClient {
+    public url:any | undefined;
+    constructor() {
+        
+    }
+    @logMethod("http://baidu.com")
+    getData() {
+        console.log(this.url);
+    }
+}
+var http:any = new httpClient();
+http.getData(123,'xxx');
+
 ```
